@@ -1,5 +1,4 @@
-from random import random as rnd, choice
-from pyfiglet import Figlet
+from random import randint as rnd, choice
 
 
 class Ship:
@@ -25,6 +24,10 @@ class Ship:
                 raise ValueError("Корабль не может стоять рядом с другим кораблем")
             if row < len(pole) - 1 and any(pole[row + 1][col + i] == '■' for i in range(self.size)):
                 raise ValueError("Корабль не может стоять рядом с другим кораблем")
+            # Проверка на занятость клеток
+            for i in range(self.size):
+                if pole[row][col + i] == '■':
+                    raise ValueError("Корабль не может стоять на другом корабле")
             # Размещение корабля по горизонтали
             for i in range(self.size):
                 pole[row][col + i] = '■'
@@ -44,6 +47,10 @@ class Ship:
                 raise ValueError("Корабль не может стоять рядом с другим кораблем")
             if col < len(pole[0]) - 1 and any(pole[row + i][col + 1] == '■' for i in range(self.size)):
                 raise ValueError("Корабль не может стоять рядом с другим кораблем")
+            # Проверка на занятость клеток
+            for i in range(self.size):
+                if pole[row + i][col] == '■':
+                    raise ValueError("Корабль не может стоять на другом корабле")
             # Размещение корабля по вертикали
             for i in range(self.size):
                 pole[row + i][col] = '■'
@@ -90,6 +97,7 @@ class Gamelogic:
                 print()
 
     def create_ships(self):
+
         self.place_ship(self.pole, 3, 1)
         self.place_ship(self.pole, 2, 2)
         self.place_ship(self.pole, 1, 4)
@@ -99,12 +107,12 @@ class Gamelogic:
 
     def place_ship(self, pole, size, count, enemy=False):
         for _ in range(count):
-            horizontal = choice([True, False])
-            ship = Ship(size, horizontal)
             while True:
                 try:
-                    row = int(rnd() * 6)
-                    col = int(rnd() * 6)
+                    horizontal = choice([True, False])
+                    ship = Ship(size, horizontal)
+                    row = int(rnd(0, 5))
+                    col = int(rnd(0, 5))
                     ship.place(row, col, pole)
                     if enemy is False:
                         self.ships.append(ship)
@@ -143,8 +151,8 @@ class Gamelogic:
 
     def enemy_move(self):
         while True:
-            row = int(rnd() * 6)
-            col = int(rnd() * 6)
+            row = rnd(0, 5)
+            col = rnd(0, 5)
             if self.pole[row][col] in ('O', '■'):
                 break
         for ship in self.ships:
@@ -160,13 +168,6 @@ class Gamelogic:
         print(f"Противник промахнулся!")
         return False
 
-    def check_win(self):
-        for ship in self.enemy_ships:
-            if not ship.death:
-                return False
-        print(f"Вы победили!")
-        return True
-
     def check_lose(self):
         for ship in self.ships:
             if not ship.death:
@@ -174,21 +175,28 @@ class Gamelogic:
         print(f"Вы проиграли!")
         return True
 
+    def check_win(self):
+        for ship in self.enemy_ships:
+            if not ship.death:
+                return False
+        print(f"Вы победили!")
+        return True
 
-def run():
-    r = Figlet(font='banner3')
-    print(r.renderText('GAME BATTLE SHIP'))
-    game = Gamelogic()
-    game.create_ships()
-    while True:
-        game.show_pole()
-        game.show_pole(enemy=True)
-        if game.make_move():
-            if game.check_win():
-                break
-        if game.enemy_move():
-            if game.check_lose():
-                break
+    @staticmethod
+    def eggs():
+        if rnd(1, 10) == 5:
+            print('Это не баг, это фича.')
 
 
-run()
+game = Gamelogic()
+game.create_ships()
+while True:
+    game.show_pole()
+    game.show_pole(enemy=True)
+    if game.make_move():
+        if game.check_win():
+            break
+    if game.enemy_move():
+        if game.check_lose():
+            game.eggs()
+            break
